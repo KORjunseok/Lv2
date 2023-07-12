@@ -24,14 +24,34 @@ app.get("/", (req, res) => {
 });
 
 //회원가입
-app.post("/signup", (req, res) => {
-  const { nickname, password, confirm } = req.body;
-  if (nickname.length < 3 || !/^[a-zA-Z0-9]+$/.test(nickname)) {
-    res.status(412).send("닉네임의 형식이 일치하지 않습니다.");
-    return;
-  }
+app.post("/signup", async (req, res) => {
+  try {
+    const { nickname, password, confirm } = req.body;
+    if (nickname.length < 3 || !/^[a-zA-Z0-9]+$/.test(nickname)) {
+      res.status(412).send("닉네임의 형식이 일치하지 않습니다.");
+      // console.log(nickname);
+      return;
+    }
+    if (password !== confirm) {
+      res.status(412).send("패스워드가 일치하지 않습니다.");
+      return;
+    }
+    if (password.length < 4) {
+      res.status(412).send("패스워드 형식이 일치하지 않습니다.");
+      return;
+    }
+    if (password.includes(nickname)) {
+      res.status(412).send("패스워드에 닉네임이 포함되어 있습니다.");
+      return;
+    }
 
-  res.status(201).send("회원가입 완료");
+    const query = "INSERT INTO Lv2 (nickname, password) VALUES (?, ?)";
+    await con.execute(query, [nickname, password]);
+    res.status(201).send("회원가입에 성공하였습니다.");
+  } catch (error) {
+    console.log(error);
+    res.status(400).send("요청한 데이터 형식이 올바르지 않습니다.");
+  }
 });
 
 app.listen(port, () => {
